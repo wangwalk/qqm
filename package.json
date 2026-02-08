@@ -1,0 +1,40 @@
+{
+  "name": "qqm",
+  "version": "1.0.0",
+  "description": "Simple CLI for QQ Music",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "qqm": "./dist/index.js"
+  },
+  "files": ["dist/**/*", "README.md", "LICENSE"],
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
+    "test": "node test/integration.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@steipete/sweet-cookie": "^0.1.0",
+    "axios": "^1.6.0",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^20.10.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.54.0"
+  },
+  "keywords": ["qq-music", "qqmusic", "cli", "music", "terminal"],
+  "license": "MIT"
+}
