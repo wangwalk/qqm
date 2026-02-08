@@ -1,4 +1,5 @@
 import { getApiClient } from './client.js';
+import { getAuthManager } from '../auth/manager.js';
 import type { Track, UserProfile } from '../types/index.js';
 
 interface QQUserInfoResponse {
@@ -6,10 +7,9 @@ interface QQUserInfoResponse {
   req_0: {
     code: number;
     data: {
-      creator: {
-        encrypt_uin: string;
+      info: {
         nick: string;
-        headpic?: string;
+        logo?: string;
       };
     };
   };
@@ -79,35 +79,42 @@ export async function getUserProfile(): Promise<UserProfile> {
   const client = getApiClient();
   const response = await client.request<QQUserInfoResponse>({
     req_0: {
-      module: 'music.UnLoginModule.MyHomepage',
-      method: 'MyHomepage',
+      module: 'music.UserInfo.userInfoServer',
+      method: 'GetLoginUserInfo',
       param: {},
     },
   });
 
-  const creator = response.req_0.data.creator;
+  const info = response.req_0.data.info;
+  const authManager = getAuthManager();
+  const cookies = authManager.getCookies();
   return {
-    id: creator.encrypt_uin,
-    nickname: creator.nick,
-    avatarUrl: creator.headpic,
+    id: cookies?.wxuin || cookies?.uin || '',
+    nickname: info.nick,
+    avatarUrl: info.logo,
   };
 }
 
 export async function getLikedTrackIds(): Promise<string[]> {
   const client = getApiClient();
+  const authManager = getAuthManager();
+  const cookies = authManager.getCookies();
+  const euin = cookies?.euin || '';
+
   const response = await client.request<QQFavSongListResponse>({
     req_0: {
-      module: 'music.srfDissInfo.aiDissInfo',
-      method: 'uniform_get_Ede_Diss_info',
+      module: 'music.srfDissInfo.DissInfo',
+      method: 'CgiGetDiss',
       param: {
+        dirid: 201,
+        enc_host_uin: euin,
         onlysonglist: 1,
-        disstid: 0,
         song_begin: 0,
         song_num: 1000,
       },
     },
   });
-  return response.req_0.data.songlist.map((s) => s.mid);
+  return (response.req_0.data.songlist || []).map((s) => s.mid);
 }
 
 export async function likeTrack(mid: string, like: boolean = true): Promise<void> {
@@ -147,7 +154,10 @@ export async function getRecentTracks(limit: number = 100): Promise<Track[]> {
       },
     },
   });
-  return (response.req_0.data.vecPlayRecord || []).map((item) =>
+  if (response.req_0.code !== 0) {
+    throw new Error('Recent play history unavailable (may require QQ login instead of WeChat)');
+  }
+  return (response.req_0.data?.vecPlayRecord || []).map((item) =>
     transformTrack(item.stSongInfo),
   );
 }

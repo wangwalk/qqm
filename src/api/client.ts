@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { createHash } from 'crypto';
 import { getAuthManager } from '../auth/manager.js';
 import * as fs from 'fs';
 import * as http from 'http';
@@ -31,7 +32,7 @@ export class ApiClient {
         'User-Agent': USER_AGENT,
         'Content-Type': 'application/json',
         Origin: 'https://y.qq.com',
-        Referer: 'https://y.qq.com',
+        Referer: 'https://c.y.qq.com/',
       },
       httpAgent,
       httpsAgent,
@@ -56,16 +57,30 @@ export class ApiClient {
   private getUin(): string {
     const authManager = getAuthManager();
     const cookies = authManager.getCookies();
-    return cookies?.uin || '0';
+    return cookies?.wxuin || cookies?.uin || '0';
+  }
+
+  private computeSign(body: Record<string, unknown>): string {
+    const P1 = [23, 14, 6, 36, 16, 7, 19]; // filtered from [23,14,6,36,16,40,7,19] where < 40
+    const P2 = [16, 1, 32, 12, 19, 27, 8, 5];
+    const SV = [89, 39, 179, 150, 218, 82, 58, 252, 177, 52, 186, 123, 120, 64, 242, 133, 143, 161, 121, 179];
+    const h = createHash('sha1').update(JSON.stringify(body)).digest('hex').toUpperCase();
+    const p1 = P1.map((i) => h[i]).join('');
+    const p2 = P2.map((i) => h[i]).join('');
+    const buf = Buffer.alloc(20);
+    for (let i = 0; i < 20; i++) buf[i] = SV[i] ^ parseInt(h.slice(i * 2, i * 2 + 2), 16);
+    return ('zzc' + p1 + buf.toString('base64').replace(/[/+=]/g, '') + p2).toLowerCase();
   }
 
   async request<T>(modules: Record<string, QQMusicModule>): Promise<T> {
     const gtk = this.computeGtk();
     const uin = this.getUin();
+    const authManager = getAuthManager();
+    const cookies = authManager.getCookies();
 
-    const body = {
+    const body: Record<string, unknown> = {
       comm: {
-        cv: 0,
+        cv: 4747474,
         ct: 11,
         format: 'json',
         inCharset: 'utf-8',
@@ -74,21 +89,25 @@ export class ApiClient {
         platform: 'yqq.json',
         needNewCode: 0,
         uin,
+        qq: uin,
+        authst: cookies?.qm_keyst || '',
+        tmeLoginType: String(cookies?.tmeLoginType || '1'),
+        tmeAppID: 'qqmusic',
         g_tk_new_20200303: gtk,
         g_tk: gtk,
       },
       ...modules,
     };
 
+    const sign = this.computeSign(body);
     const moduleNames = Object.keys(modules).join(', ');
     verbose(`QQ Music API: ${moduleNames}`);
-    debug(`POST ${BASE_URL}`);
+    debug(`POST ${BASE_URL} (sign=${sign})`);
 
-    const authManager = getAuthManager();
     const cookieString = authManager.getCookieString();
 
     try {
-      const response = await this.client.post<T>(BASE_URL, body, {
+      const response = await this.client.post<T>(`${BASE_URL}?sign=${sign}`, body, {
         headers: cookieString ? { Cookie: cookieString } : {},
       });
 

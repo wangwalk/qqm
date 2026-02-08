@@ -56,11 +56,20 @@ function skipTest(label, reason) {
 // --- Setup auth for CI ---
 const QM_KEYST = process.env.QM_KEYST;
 const QM_UIN = process.env.QM_UIN || '0';
+const QM_WXUIN = process.env.QM_WXUIN || '';
+const QM_EUIN = process.env.QM_EUIN || '';
+const QM_LOGIN_TYPE = process.env.QM_LOGIN_TYPE || '';
+const QM_TME_LOGIN_TYPE = process.env.QM_TME_LOGIN_TYPE || '1';
 if (QM_KEYST) {
   // Write session file so CLI can find it
   const profileDir = join(homedir(), '.config', 'qqm', 'profiles', 'default');
   mkdirSync(profileDir, { recursive: true });
-  writeFileSync(join(profileDir, 'session.json'), JSON.stringify({ qm_keyst: QM_KEYST, qqmusic_key: QM_KEYST, uin: QM_UIN }));
+  const session = { qm_keyst: QM_KEYST, qqmusic_key: QM_KEYST, uin: QM_UIN };
+  if (QM_WXUIN) session.wxuin = QM_WXUIN;
+  if (QM_EUIN) session.euin = QM_EUIN;
+  if (QM_LOGIN_TYPE) session.login_type = QM_LOGIN_TYPE;
+  if (QM_TME_LOGIN_TYPE) session.tmeLoginType = QM_TME_LOGIN_TYPE;
+  writeFileSync(join(profileDir, 'session.json'), JSON.stringify(session));
 }
 
 const hasAuth = !!QM_KEYST;

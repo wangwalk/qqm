@@ -94,8 +94,8 @@ export async function getTrackUrl(mid: string, quality: Quality = 'high'): Promi
 
   const response = await client.request<QQVkeyResponse>({
     req_0: {
-      module: 'vkey.GetVkeyServer',
-      method: 'CgiGetVkey',
+      module: 'music.vkey.GetVkey',
+      method: 'UrlGetVkey',
       param: {
         songmid: [mid],
         songtype: [0],

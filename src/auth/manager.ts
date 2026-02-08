@@ -14,7 +14,7 @@ export class AuthManager {
 
     const options: any = {
       url: 'https://y.qq.com/',
-      names: ['qqmusic_key', 'qm_keyst', 'uin'],
+      names: ['qqmusic_key', 'qm_keyst', 'uin', 'wxuin', 'euin', 'login_type', 'tmeLoginType'],
     };
 
     if (profile) {
@@ -72,7 +72,7 @@ export class AuthManager {
   }> {
     const credentials = {
       qm_keyst: !!this.cookies?.qm_keyst,
-      uin: !!this.cookies?.uin,
+      uin: !!(this.cookies?.uin || this.cookies?.wxuin),
     };
     const warnings: string[] = [];
 

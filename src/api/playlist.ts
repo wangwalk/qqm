@@ -1,4 +1,5 @@
 import { getApiClient } from './client.js';
+import { getAuthManager } from '../auth/manager.js';
 import type { Playlist, Track } from '../types/index.js';
 
 interface QQPlaylistDetailResponse {
@@ -33,12 +34,12 @@ interface QQUserPlaylistsResponse {
   req_0: {
     code: number;
     data: {
-      disslist: {
-        tid: number;
-        diss_name: string;
-        diss_cover: string;
-        song_cnt: number;
-        listen_num: number;
+      total: number;
+      v_playlist: {
+        dirId: number;
+        dirName: string;
+        coverUrl?: string;
+        songNum: number;
       }[];
     };
   };
@@ -70,13 +71,17 @@ function transformTrack(track: {
 
 export async function getPlaylistDetail(id: string): Promise<Playlist> {
   const client = getApiClient();
+  const authManager = getAuthManager();
+  const cookies = authManager.getCookies();
+  const euin = cookies?.euin || '';
 
   const response = await client.request<QQPlaylistDetailResponse>({
     req_0: {
-      module: 'music.srfDissInfo.aiDissInfo',
-      method: 'uniform_get_Ede_Diss_info',
+      module: 'music.srfDissInfo.DissInfo',
+      method: 'CgiGetDiss',
       param: {
-        disstid: Number(id),
+        dirid: Number(id),
+        enc_host_uin: euin,
         onlysonglist: 0,
         song_begin: 0,
         song_num: 100000,
@@ -103,19 +108,24 @@ export async function getPlaylistDetail(id: string): Promise<Playlist> {
 
 export async function getUserPlaylists(): Promise<Playlist[]> {
   const client = getApiClient();
+  const authManager = getAuthManager();
+  const cookies = authManager.getCookies();
+  const uin = cookies?.wxuin || cookies?.uin || '0';
 
   const response = await client.request<QQUserPlaylistsResponse>({
     req_0: {
-      module: 'music.srfDissInfo.aiDissInfo',
-      method: 'uniform_get_homepage_diss_list',
-      param: {},
+      module: 'music.musicasset.PlaylistBaseRead',
+      method: 'GetPlaylistByUin',
+      param: {
+        uin,
+      },
     },
   });
 
-  return response.req_0.data.disslist.map((p) => ({
-    id: String(p.tid),
-    name: p.diss_name,
-    coverUrl: p.diss_cover,
-    trackCount: p.song_cnt,
+  return (response.req_0.data.v_playlist || []).map((p) => ({
+    id: String(p.dirId),
+    name: p.dirName,
+    coverUrl: p.coverUrl,
+    trackCount: p.songNum,
   }));
 }
