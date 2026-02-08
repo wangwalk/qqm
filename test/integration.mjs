@@ -14,7 +14,7 @@ import { join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI = resolve(__dirname, '..', 'dist', 'index.js');
-const TRACK_MID = '001yS0N93pXBYp'; // 周杰伦 - 晴天
+const TRACK_MID = '0039MnYb0qxYhV'; // 周杰伦 - 晴天
 
 let pass = 0;
 let fail = 0;

@@ -9,20 +9,20 @@ interface QQSearchResponse {
       body: {
         song?: {
           list: QQTrack[];
-          totalnum: number;
         };
         album?: {
           list: QQAlbum[];
-          totalnum: number;
         };
         songlist?: {
           list: QQPlaylist[];
-          totalnum: number;
         };
         singer?: {
           list: QQArtist[];
-          totalnum: number;
         };
+      };
+      meta?: {
+        sum: number;
+        estimate_sum: number;
       };
     };
   };
@@ -58,9 +58,9 @@ interface QQArtist {
 
 const typeMap: Record<SearchType, number> = {
   track: 0,
-  album: 8,
+  album: 2,
   playlist: 3,
-  artist: 9,
+  artist: 1,
 };
 
 function transformTrack(track: QQTrack): Track {
@@ -133,9 +133,11 @@ export async function search(
     },
   });
 
-  const body = response.req_0.data.body;
+  const data = response.req_0.data;
+  const body = data.body;
+  const estimateTotal = data.meta?.estimate_sum || data.meta?.sum || 0;
   const result: SearchResult = {
-    total: 0,
+    total: estimateTotal,
     offset,
     limit,
   };
@@ -143,19 +145,15 @@ export async function search(
   switch (type) {
     case 'track':
       result.tracks = (body.song?.list || []).map(transformTrack);
-      result.total = body.song?.totalnum || 0;
       break;
     case 'album':
       result.albums = (body.album?.list || []).map(transformAlbum);
-      result.total = body.album?.totalnum || 0;
       break;
     case 'playlist':
       result.playlists = (body.songlist?.list || []).map(transformPlaylist);
-      result.total = body.songlist?.totalnum || 0;
       break;
     case 'artist':
       result.artists = (body.singer?.list || []).map(transformArtist);
-      result.total = body.singer?.totalnum || 0;
       break;
   }
 

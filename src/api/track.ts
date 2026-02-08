@@ -60,9 +60,10 @@ export async function getTrackDetail(mid: string): Promise<Track> {
   const response = await client.request<QQTrackDetailResponse>({
     req_0: {
       module: 'music.pf_song_detail_svr',
-      method: 'GetSongDetail',
+      method: 'get_song_detail_yqq',
       param: {
         song_mid: mid,
+        song_type: 0,
       },
     },
   });
@@ -168,8 +169,8 @@ export async function getTrackDetails(mids: string[]): Promise<Track[]> {
           const response = await client.request<QQTrackDetailResponse>({
             req_0: {
               module: 'music.pf_song_detail_svr',
-              method: 'GetSongDetail',
-              param: { song_mid: mid },
+              method: 'get_song_detail_yqq',
+              param: { song_mid: mid, song_type: 0 },
             },
           });
           const track = response.req_0.data.track_info;

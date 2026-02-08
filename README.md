@@ -48,7 +48,7 @@ bun add -g qqm
 ```bash
 qqm auth login                        # Import cookies from browser
 qqm search track "晴天"               # Search
-qqm track play 001yS0N93pXBYp         # Play (requires mpv)
+qqm track play 0039MnYb0qxYhV         # Play (requires mpv)
 qqm player pause                      # Pause/resume
 qqm player stop                       # Stop
 ```

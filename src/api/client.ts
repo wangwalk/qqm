@@ -65,14 +65,14 @@ export class ApiClient {
 
     const body = {
       comm: {
-        cv: 4747474,
-        ct: 24,
+        cv: 0,
+        ct: 11,
         format: 'json',
         inCharset: 'utf-8',
         outCharset: 'utf-8',
         notice: 0,
         platform: 'yqq.json',
-        needNewCode: 1,
+        needNewCode: 0,
         uin,
         g_tk_new_20200303: gtk,
         g_tk: gtk,
